@@ -2049,6 +2049,7 @@ error:
 #define SYSCOIN_SPT_ASSETALLOCATIONSEND 0x7408
 #define SYSCOIN_SPT_SYSX 1045909988
 #define SYSCOIN_SPT_AGX 367794646
+
 void get_spt_coinid(char (*coinId)[], uint32_t assetguid) {
     switch(assetguid) {
         case SYSCOIN_SPT_SYSX:
@@ -2062,7 +2063,99 @@ void get_spt_coinid(char (*coinId)[], uint32_t assetguid) {
             break;
     }
 }
-bool parse_spt_asset_and_amount(unsigned char (*amount)[],uint32_t *asset){
+unsigned long int spt_get_varint(unsigned char* buffer, unsigned int *offset) {
+    unsigned char firstByte;
+    unsigned bufLen = 0;
+    bufLen = strlen(buffer);
+    if(*offset >= bufLen){
+        PRINTF("spt_get_varint: offer >= bufLen (1)\n");
+        return 0;
+    }	
+    firstByte = buffer[*offset];
+    if (firstByte < 0xFD) {
+        return firstByte;
+    } else if (firstByte == 0xFD) {
+        if((*offset+1) >= bufLen){
+            PRINTF("spt_get_varint: offer >= bufLen (2)\n");
+            return 0;
+        }
+        unsigned long int result;
+        result =
+            (unsigned long int)(buffer[*offset]) |
+            ((unsigned long int)((buffer[*offset + 1])) << 8);
+        *offset += 1;
+        return result;
+    } else if (firstByte == 0xFE) {
+        if((*offset+4) >= bufLen){
+            PRINTF("spt_get_varint: offer >= bufLen (3)\n");
+            return 0;
+        }
+        unsigned long int result;
+        result = btchip_read_u32(buffer[*offset], 0, 0);
+        *offset += 4;
+        return result;
+    } else {
+        PRINTF("spt_get_varint: firstByte failure\n");
+        return 0;
+    }
+}
+bool parse_spt_asset_and_amount(unsigned int offset, unsigned char* buffer, unsigned char (*amountBuffer)[], uint32_t *asset){
+    unsigned long int varintvalue;
+    unsigned char numReceivers
+    unsigned int i;
+    unsigned long int varintvalue;
+    unsigned long long amount = 0;
+    unsigned bufLen = 0;
+    bufLen = strlen(buffer);
+    if(offset >= bufLen){
+        PRINTF("parse_spt_asset_and_amount: offer >= bufLen (1)\n");
+        return false;
+    }
+    // allocation
+	*asset = btchip_read_u32(buffer[offset], 0, 0);
+    offset += 4;
+    if(offset >= bufLen){
+        PRINTF("parse_spt_asset_and_amount: offer >= bufLen (2)\n");
+        return false;
+    }	
+    // witness version
+    offset += 1;
+    if(offset >= bufLen){
+        PRINTF("parse_spt_asset_and_amount: offer >= bufLen (3)\n");
+        return false;
+    }
+    // witness program
+    varintvalue = spt_get_varint(buffer, &offset)
+    offset += varintvalue;
+    if(offset >= bufLen){
+        PRINTF("parse_spt_asset_and_amount: offer >= bufLen (4)\n");
+        return false;
+    }
+    numReceivers = buffer[offset];
+    offset += 1;
+    for (i = 0; i < numReceivers; i++) {
+        // witness version
+        offset += 1;
+        if(offset >= bufLen){
+            PRINTF("parse_spt_asset_and_amount: offer >= bufLen (5)\n");
+            return false;
+        }
+        // witness program
+        varintvalue = spt_get_varint(buffer, &offset)
+        offset += varintvalue;
+        if(offset >= bufLen){
+            PRINTF("parse_spt_asset_and_amount: offer >= bufLen (6)\n");
+            return false;
+        }
+        // accumulate recipient amount
+        amount += btchip_read_u64(buffer[offset], 0, 0);
+        offset += 8;
+        if(offset >= bufLen){
+            PRINTF("parse_spt_asset_and_amount: offer >= bufLen (7)\n");
+            return false;
+        }
+    }
+    btchip_write_u64_le(*amountBuffer, amount);
     return true;
 }
 uint8_t prepare_single_output() {
@@ -2146,7 +2239,7 @@ uint8_t prepare_single_output() {
         uint32_t nVersion = btchip_read_u32(btchip_context_D.transactionVersion, 0, 0);
         if(nVersion == SYSCOIN_SPT_ASSETSEND || nVersion == SYSCOIN_SPT_ASSETALLOCATIONSEND){
             uint32_t assetguid;
-            if(parse_spt_asset_and_amount(&amount, &assetguid)) {
+            if(parse_spt_asset_and_amount(offset, btchip_context_D.currentOutput, &amount, &assetguid)) {
                 char coinId[MAX_SHORT_COIN_ID];
                 get_spt_coinid(&coinId, assetguid);
                 unsigned char coinIdLength = strlen(PIC(coinId));
