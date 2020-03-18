@@ -2045,6 +2045,26 @@ error:
 #define MAIDSAFE_ASSETID 3
 #define USDT_ASSETID 31
 
+#define SYSCOIN_SPT_ASSETSEND 0x7405
+#define SYSCOIN_SPT_ASSETALLOCATIONSEND 0x7408
+#define SYSCOIN_SPT_SYSX 1045909988
+#define SYSCOIN_SPT_AGX 367794646
+void get_spt_coinid(unsigned char *coinId[], uint32_t assetguid) {
+    switch(assetguid) {
+        case SYSCOIN_SPT_SYSX:
+            strcpy(vars.tmp.fullAmount, "SYSX ");
+            break;
+        case SYSCOIN_SPT_AGX:
+            strcpy(vars.tmp.fullAmount, "AGX ");
+            break;
+        default:
+            strcpy(vars.tmp.fullAmount, "SPT ");
+            break;
+    }
+}
+bool parse_spt_asset_and_amount(unsigned char *amount[],uint32_t *asset){
+    return true;
+}
 uint8_t prepare_single_output() {
     // TODO : special display for OP_RETURN
     unsigned char amount[8];
@@ -2121,9 +2141,29 @@ uint8_t prepare_single_output() {
     }
 
     // Prepare amount
-
+    // handle Syscoin SPT
+    if(G_coin_config->kind == COIN_KIND_SYSCOIN) {
+        uint32_t nVersion = btchip_read_u32(btchip_context_D.transactionVersion, 0, 0);
+        if(nVersion == SYSCOIN_SPT_ASSETSEND || nVersion == SYSCOIN_SPT_ASSETALLOCATIONSEND){
+            uint32_t assetguid;
+            if(parse_spt_asset_and_amount(&amount, &assetguid)) {
+                unsigned char coinId[MAX_SHORT_COIN_ID];
+                get_spt_coinid(&coinId, assetguid);
+                unsigned char coinIdLength = strlen(PIC(coinId));
+                os_memmove(vars.tmp.fullAmount, coinId,
+                        coinIdLength);
+                vars.tmp.fullAmount[coinIdLength] = ' ';
+                btchip_context_D.tmp =
+                    (unsigned char *)(vars.tmp.fullAmount +
+                                coinIdLength + 1);
+                textSize = btchip_convert_hex_amount_to_displayable(amount);
+                vars.tmp.fullAmount[textSize + coinIdLength + 1] =
+                    '\0'; 
+            }
+        }
+    }
     // Handle Omni simple send
-    if ((btchip_context_D.currentOutput[offset + 2] == 0x14) &&
+    else if ((btchip_context_D.currentOutput[offset + 2] == 0x14) &&
         (os_memcmp(btchip_context_D.currentOutput + offset + 3, "omni", 4) == 0) &&
         (os_memcmp(btchip_context_D.currentOutput + offset + 3 + 4, "\0\0\0\0", 4) == 0)) {
             uint8_t headerLength;
