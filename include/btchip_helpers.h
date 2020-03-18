@@ -39,13 +39,9 @@ void btchip_sleep32(unsigned long int delayEach, unsigned long int delayRepeat);
 
 unsigned long int btchip_read_u32(unsigned char *buffer, unsigned char be,
                                   unsigned char skipSign);
-unsigned long long btchip_read_u64(unsigned char *buffer, unsigned char be,
-                                  unsigned char skipSign);
-
+                                  
 void btchip_write_u32_be(unsigned char *buffer, unsigned long int value);
 void btchip_write_u32_le(unsigned char *buffer, unsigned long int value);
-void btchip_write_u64_be(unsigned char *buffer, unsigned long long value);
-void btchip_write_u64_le(unsigned char *buffer, unsigned long long value);
 
 void btchip_retrieve_keypair_discard(unsigned char *privateComponent,
                                      unsigned char derivePublic);

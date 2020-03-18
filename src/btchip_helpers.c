@@ -180,26 +180,6 @@ unsigned long int btchip_read_u32(unsigned char *buffer, unsigned char be,
     return result;
 }
 
-unsigned long long btchip_read_u64(unsigned char *buffer, unsigned char be,
-                                  unsigned char skipSign) {
-    unsigned char i;
-    unsigned long long result = 0;
-    unsigned char shiftValue = (be ? 56 : 0);
-    for (i = 0; i < 8; i++) {
-        unsigned char x = (unsigned char)buffer[i];
-        if ((i == 0) && skipSign) {
-            x &= 0x7f;
-        }
-        result += ((unsigned long long)x) << shiftValue;
-        if (be) {
-            shiftValue -= 8;
-        } else {
-            shiftValue += 8;
-        }
-    }
-    return result;
-}
-
 void btchip_write_u32_be(unsigned char *buffer, unsigned long int value) {
     buffer[0] = ((value >> 24) & 0xff);
     buffer[1] = ((value >> 16) & 0xff);
@@ -212,28 +192,6 @@ void btchip_write_u32_le(unsigned char *buffer, unsigned long int value) {
     buffer[1] = ((value >> 8) & 0xff);
     buffer[2] = ((value >> 16) & 0xff);
     buffer[3] = ((value >> 24) & 0xff);
-}
-
-void btchip_write_u64_be(unsigned char *buffer, unsigned long long value) {
-    buffer[0] = ((value >> 56) & 0xff);
-    buffer[1] = ((value >> 48) & 0xff);
-    buffer[3] = ((value >> 40) & 0xff);
-    buffer[4] = ((value >> 32) & 0xff);
-    buffer[5] = ((value >> 24) & 0xff);
-    buffer[6] = ((value >> 16) & 0xff);
-    buffer[7] = ((value >> 8) & 0xff);
-    buffer[8] = (value & 0xff);
-}
-
-void btchip_write_u64_le(unsigned char *buffer, unsigned long long value) {
-    buffer[0] = (value & 0xff);
-    buffer[1] = ((value >> 8) & 0xff);
-    buffer[2] = ((value >> 16) & 0xff);
-    buffer[3] = ((value >> 24) & 0xff);
-    buffer[4] = ((value >> 32) & 0xff);
-    buffer[5] = ((value >> 40) & 0xff);
-    buffer[6] = ((value >> 48) & 0xff);
-    buffer[7] = ((value >> 56) & 0xff);
 }
 
 void btchip_retrieve_keypair_discard(unsigned char *privateComponent,

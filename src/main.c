@@ -2069,6 +2069,7 @@ bool parse_spt_asset_and_amount(unsigned int offset, unsigned char* buffer, unsi
     unsigned int i;
     unsigned long long amount = 0;
     unsigned bufLen = 0;
+    os_memset(amountBuffer, 0, sizeof(amountBuffer));
     bufLen = strlen(buffer);
     if(offset >= bufLen){
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen (1)\n");
@@ -2111,14 +2112,15 @@ bool parse_spt_asset_and_amount(unsigned int offset, unsigned char* buffer, unsi
             return false;
         }
         // accumulate recipient amount
-        amount += btchip_read_u64(buffer[offset], 0, 0);
+        btchip_swap_bytes(amount, buffer[offset], 8);
+        transaction_amount_add_be(*amountBuffer,
+                                  *amountBuffer, amount);
         offset += 8;
         if(offset >= bufLen){
             PRINTF("parse_spt_asset_and_amount: offer >= bufLen (7)\n");
             return false;
         }
     }
-    btchip_write_u64_le(*amountBuffer, amount);
     return true;
 }
 uint8_t prepare_single_output() {
