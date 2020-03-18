@@ -2049,7 +2049,7 @@ error:
 #define SYSCOIN_SPT_ASSETALLOCATIONSEND 0x7408
 #define SYSCOIN_SPT_SYSX 1045909988
 #define SYSCOIN_SPT_AGX 367794646
-void get_spt_coinid(unsigned char **coinId, uint32_t assetguid) {
+void get_spt_coinid(unsigned char (*coinId)[], uint32_t assetguid) {
     switch(assetguid) {
         case SYSCOIN_SPT_SYSX:
             strcpy(*coinId, "SYSX");
@@ -2062,7 +2062,7 @@ void get_spt_coinid(unsigned char **coinId, uint32_t assetguid) {
             break;
     }
 }
-bool parse_spt_asset_and_amount(unsigned char **amount,uint32_t *asset){
+bool parse_spt_asset_and_amount(unsigned char (*amount)[],uint32_t *asset){
     return true;
 }
 uint8_t prepare_single_output() {
