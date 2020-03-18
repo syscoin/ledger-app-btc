@@ -2072,25 +2072,26 @@ bool parse_spt_asset_and_amount(unsigned int offset, unsigned char* buffer, unsi
     // assume opreturn payload is < 256 bytes, actually it should be a simple send of 80 bytes or less to fit within
     // standard 80 byte btc opreturn, even though syscoin accepts larger other HW wallets may not work with > 80 bytes so 
     // for now we stick with small simple allocation sends up to 2 or 3 receivers (only asset allocation transactions)
-    unsigned char sizeOpReturn = buffer[offset++];
+    unsigned char sizeOpReturn = buffer[offset];
     os_memset(amountBuffer, 0, sizeof(amountBuffer));
     bufLen = strlen(buffer);
     if((offset+sizeOpReturn) >= bufLen){
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen\n");
         return false;
     }
+    offset++;
     // allocation
 	*asset = btchip_read_u32(buffer[offset], 0, 0);
     offset += 4;
     // witness version
-    offset += 1;
+    offset++;
     // witness program
     varintvalue = buffer[offset++];
     offset += varintvalue;
     numReceivers = buffer[offset++];
     for (i = 0; i < numReceivers; i++) {
         // witness version
-        offset += 1;
+        offset++;
         // witness program
         varintvalue = buffer[offset++];
         offset += varintvalue;
