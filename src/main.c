@@ -2101,9 +2101,8 @@ unsigned long int spt_get_varint(unsigned char* buffer, unsigned int *offset) {
 }
 bool parse_spt_asset_and_amount(unsigned int offset, unsigned char* buffer, unsigned char (*amountBuffer)[], uint32_t *asset){
     unsigned long int varintvalue;
-    unsigned char numReceivers
+    unsigned char numReceivers;
     unsigned int i;
-    unsigned long int varintvalue;
     unsigned long long amount = 0;
     unsigned bufLen = 0;
     bufLen = strlen(buffer);
@@ -2125,7 +2124,7 @@ bool parse_spt_asset_and_amount(unsigned int offset, unsigned char* buffer, unsi
         return false;
     }
     // witness program
-    varintvalue = spt_get_varint(buffer, &offset)
+    varintvalue = spt_get_varint(buffer, &offset);
     offset += varintvalue;
     if(offset >= bufLen){
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen (4)\n");
@@ -2141,7 +2140,7 @@ bool parse_spt_asset_and_amount(unsigned int offset, unsigned char* buffer, unsi
             return false;
         }
         // witness program
-        varintvalue = spt_get_varint(buffer, &offset)
+        varintvalue = spt_get_varint(buffer, &offset);
         offset += varintvalue;
         if(offset >= bufLen){
             PRINTF("parse_spt_asset_and_amount: offer >= bufLen (6)\n");
