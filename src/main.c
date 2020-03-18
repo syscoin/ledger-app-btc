@@ -2063,44 +2063,8 @@ void get_spt_coinid(char (*coinId)[], uint32_t assetguid) {
             break;
     }
 }
-unsigned long int spt_get_varint(unsigned char* buffer, unsigned int *offset) {
-    unsigned char firstByte;
-    unsigned bufLen = 0;
-    bufLen = strlen(buffer);
-    if(*offset >= bufLen){
-        PRINTF("spt_get_varint: offer >= bufLen (1)\n");
-        return 0;
-    }	
-    firstByte = buffer[*offset];
-    if (firstByte < 0xFD) {
-        return firstByte;
-    } else if (firstByte == 0xFD) {
-        if((*offset+1) >= bufLen){
-            PRINTF("spt_get_varint: offer >= bufLen (2)\n");
-            return 0;
-        }
-        unsigned long int result;
-        result =
-            (unsigned long int)(buffer[*offset]) |
-            ((unsigned long int)((buffer[*offset + 1])) << 8);
-        *offset += 1;
-        return result;
-    } else if (firstByte == 0xFE) {
-        if((*offset+4) >= bufLen){
-            PRINTF("spt_get_varint: offer >= bufLen (3)\n");
-            return 0;
-        }
-        unsigned long int result;
-        result = btchip_read_u32(buffer[*offset], 0, 0);
-        *offset += 4;
-        return result;
-    } else {
-        PRINTF("spt_get_varint: firstByte failure\n");
-        return 0;
-    }
-}
 bool parse_spt_asset_and_amount(unsigned int offset, unsigned char* buffer, unsigned char (*amountBuffer)[], uint32_t *asset){
-    unsigned long int varintvalue;
+    unsigned char varintvalue;
     unsigned char numReceivers;
     unsigned int i;
     unsigned long long amount = 0;
@@ -2124,7 +2088,7 @@ bool parse_spt_asset_and_amount(unsigned int offset, unsigned char* buffer, unsi
         return false;
     }
     // witness program
-    varintvalue = spt_get_varint(buffer, &offset);
+    varintvalue = buffer[offset++];
     offset += varintvalue;
     if(offset >= bufLen){
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen (4)\n");
@@ -2140,7 +2104,7 @@ bool parse_spt_asset_and_amount(unsigned int offset, unsigned char* buffer, unsi
             return false;
         }
         // witness program
-        varintvalue = spt_get_varint(buffer, &offset);
+        varintvalue = buffer[offset++];
         offset += varintvalue;
         if(offset >= bufLen){
             PRINTF("parse_spt_asset_and_amount: offer >= bufLen (6)\n");
