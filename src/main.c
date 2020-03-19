@@ -2224,7 +2224,7 @@ uint8_t prepare_single_output() {
         }
     }
     // Handle Omni simple send
-    if ((btchip_context_D.currentOutput[offset + 2] == 0x14) &&
+    else if ((btchip_context_D.currentOutput[offset + 2] == 0x14) &&
         (os_memcmp(btchip_context_D.currentOutput + offset + 3, "omni", 4) == 0) &&
         (os_memcmp(btchip_context_D.currentOutput + offset + 3 + 4, "\0\0\0\0", 4) == 0)) {
             uint8_t headerLength;
