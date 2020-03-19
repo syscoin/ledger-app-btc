@@ -2067,7 +2067,7 @@ bool parse_spt_asset_and_amount(unsigned char* buffer, unsigned char (*amountBuf
     unsigned char varintvalue;
     unsigned char numReceivers;
     unsigned int i;
-    unsigned long long amount = 0;
+    unsigned char amount[8];
     unsigned int bufLen = 0;
     unsigned int offset = 1; // start at 1 because we are skipping varint
     // assume opreturn payload is < 256 bytes, actually it should be a simple send of 80 bytes or less to fit within
