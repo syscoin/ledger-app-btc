@@ -2063,7 +2063,7 @@ void get_spt_coinid(char (*coinId)[], uint32_t assetguid) {
             break;
     }
 }
-bool parse_spt_asset_and_amount(unsigned char* buffer, unsigned char (*amountBuffer)[], uint32_t *asset){
+bool parse_spt_asset_and_amount(unsigned char* buffer, unsigned char (*amountBuffer)[8], uint32_t *asset){
     unsigned char varintvalue;
     unsigned char numReceivers;
     unsigned int i;
