@@ -2050,7 +2050,7 @@ error:
 #define SYSCOIN_SPT_SYSX 1045909988
 #define SYSCOIN_SPT_AGX 367794646
 
-void get_spt_coinid(char (*coinId)[], uint32_t assetguid) {
+void get_spt_coinid(char (*coinId)[MAX_SHORT_COIN_ID], uint32_t assetguid) {
     switch(assetguid) {
         case SYSCOIN_SPT_SYSX:
             strcpy(*coinId, "SYSX");
@@ -2063,35 +2063,35 @@ void get_spt_coinid(char (*coinId)[], uint32_t assetguid) {
             break;
     }
 }
-bool parse_spt_asset_and_amount(unsigned char* buffer, unsigned int offset, unsigned char (*amountBuffer)[8], uint32_t *asset){
+int parse_spt_asset_and_amount(unsigned char* buffer, unsigned int offset, unsigned char (*amountBuffer)[8], uint32_t *asset){
     unsigned char varintvalue;
     unsigned char numReceivers;
     unsigned int i;
     unsigned char amount[8];
     if(offset >= MAX_OUTPUT_TO_CHECK){
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen (1)\n");
-        return false;
+        return 0;
     }	
     os_memset(*amountBuffer, 0, sizeof(*amountBuffer));
     // allocation
-	*asset = btchip_read_u32(buffer + offset, 0, 0);
+	*asset = btchip_read_u32(&buffer[offset], 1, 0);
     offset += 4;
     if(offset >= MAX_OUTPUT_TO_CHECK){
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen (2)\n");
-        return false;
+        return 0;
     }	
     // witness version
     offset++;
     if(offset >= MAX_OUTPUT_TO_CHECK){
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen (3)\n");
-        return false;
+        return 0;
     }
     // witness program
     varintvalue = buffer[offset++];
     offset += varintvalue;
     if(offset >= MAX_OUTPUT_TO_CHECK){
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen (4)\n");
-        return false;
+        return 0;
     }
     numReceivers = buffer[offset++];
     for (i = 0; i < numReceivers; i++) {
@@ -2099,26 +2099,26 @@ bool parse_spt_asset_and_amount(unsigned char* buffer, unsigned int offset, unsi
         offset++;
         if(offset >= MAX_OUTPUT_TO_CHECK){
             PRINTF("parse_spt_asset_and_amount: offer >= bufLen (5)\n");
-            return false;
+            return 0;
         }
         // witness program
         varintvalue = buffer[offset++];
         offset += varintvalue;
         if(offset >= MAX_OUTPUT_TO_CHECK){
             PRINTF("parse_spt_asset_and_amount: offer >= bufLen (6)\n");
-            return false;
+            return 0;
         }
         // accumulate recipient amount
-        btchip_swap_bytes(amount, buffer + offset, 8);
+        btchip_swap_bytes(amount, &buffer[offset], 8);
         transaction_amount_add_be(*amountBuffer,
                                   *amountBuffer, amount);
         offset += 8;
         if(offset >= MAX_OUTPUT_TO_CHECK){
             PRINTF("parse_spt_asset_and_amount: offer >= bufLen (7)\n");
-            return false;
+            return 0;
         }
     }
-    return true;
+    return 1;
 }
 uint8_t prepare_single_output() {
     // TODO : special display for OP_RETURN
@@ -2198,29 +2198,31 @@ uint8_t prepare_single_output() {
     // Prepare amount
     // handle Syscoin SPT
     uint32_t nVersion = btchip_read_u32(btchip_context_D.transactionVersion, 0, 0);
-    if(G_coin_config->kind == COIN_KIND_SYSCOIN && (nVersion == SYSCOIN_SPT_ASSETSEND || nVersion == SYSCOIN_SPT_ASSETALLOCATIONSEND)) {
-        uint32_t assetguid;
-        // offset + 3 (skip field delim + opreturn op + varint)
-        if(parse_spt_asset_and_amount(btchip_context_D.currentOutput, offset+3, &amount, &assetguid)) {
-            char coinId[MAX_SHORT_COIN_ID];
-            unsigned char coinIdLength;
-            get_spt_coinid(&coinId, assetguid);
-            coinIdLength = strlen(PIC(coinId));
-            os_memmove(vars.tmp.fullAmount, coinId,
-                    coinIdLength);
-            vars.tmp.fullAmount[coinIdLength] = ' ';
-            btchip_context_D.tmp =
-                (unsigned char *)(vars.tmp.fullAmount +
-                            coinIdLength + 1);
-            textSize = btchip_convert_hex_amount_to_displayable(amount);
-            vars.tmp.fullAmount[textSize + coinIdLength + 1] =
-                '\0'; 
-        } else {
+    if(G_coin_config->kind == COIN_KIND_SYSCOIN) {
+        if(nVersion == SYSCOIN_SPT_ASSETSEND || nVersion == SYSCOIN_SPT_ASSETALLOCATIONSEND) {
             return 0;
+            uint32_t assetguid;
+            // offset + 3 (varint + opreturn op + varint)
+            if(parse_spt_asset_and_amount(btchip_context_D.currentOutput, offset+3, &amount, &assetguid)) {
+                char coinId[MAX_SHORT_COIN_ID];
+                unsigned char coinIdLength;
+                get_spt_coinid(&coinId, assetguid);
+                coinIdLength = strlen(PIC(coinId));
+                os_memmove(vars.tmp.fullAmount, coinId,
+                        coinIdLength);
+                vars.tmp.fullAmount[coinIdLength] = ' ';
+                btchip_context_D.tmp =
+                    (unsigned char *)(vars.tmp.fullAmount +
+                                coinIdLength + 1);
+                textSize = btchip_convert_hex_amount_to_displayable(amount);
+                vars.tmp.fullAmount[textSize + coinIdLength + 1] =
+                    '\0'; 
+                return 1;
+            }
         }
     }
     // Handle Omni simple send
-    else if ((btchip_context_D.currentOutput[offset + 2] == 0x14) &&
+    if ((btchip_context_D.currentOutput[offset + 2] == 0x14) &&
         (os_memcmp(btchip_context_D.currentOutput + offset + 3, "omni", 4) == 0) &&
         (os_memcmp(btchip_context_D.currentOutput + offset + 3 + 4, "\0\0\0\0", 4) == 0)) {
             uint8_t headerLength;
