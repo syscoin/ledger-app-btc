@@ -2063,43 +2063,68 @@ void get_spt_coinid(char (*coinId)[], uint32_t assetguid) {
             break;
     }
 }
-bool parse_spt_asset_and_amount(unsigned int offset, unsigned char* buffer, unsigned char (*amountBuffer)[], uint32_t *asset){
+bool parse_spt_asset_and_amount(unsigned char* buffer, unsigned char (*amountBuffer)[], uint32_t *asset){
     unsigned char varintvalue;
     unsigned char numReceivers;
     unsigned int i;
     unsigned long long amount = 0;
-    unsigned bufLen = 0;
+    unsigned int bufLen = 0;
+    unsigned int offset = 1; // start at 1 because we are skipping varint
     // assume opreturn payload is < 256 bytes, actually it should be a simple send of 80 bytes or less to fit within
     // standard 80 byte btc opreturn, even though syscoin accepts larger other HW wallets may not work with > 80 bytes so 
     // for now we stick with small simple allocation sends up to 2 or 3 receivers (only asset allocation transactions)
-    unsigned char sizeOpReturn = buffer[offset];
-    os_memset(amountBuffer, 0, sizeof(amountBuffer));
-    bufLen = strlen(buffer);
-    if((offset+sizeOpReturn) >= bufLen){
+    unsigned char sizeOpReturn = buffer[0];
+    bufLen = sizeof(buffer);
+    if(sizeOpReturn >= bufLen){
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen\n");
         return false;
     }
-    offset++;
+    os_memset(amountBuffer, 0, sizeof(amountBuffer));
+    bufLen = sizeof(buffer);
     // allocation
 	*asset = btchip_read_u32(buffer[offset], 0, 0);
     offset += 4;
+    if(offset >= bufLen){
+        PRINTF("parse_spt_asset_and_amount: offer >= bufLen (2)\n");
+        return false;
+    }	
     // witness version
     offset++;
+    if(offset >= bufLen){
+        PRINTF("parse_spt_asset_and_amount: offer >= bufLen (3)\n");
+        return false;
+    }
     // witness program
     varintvalue = buffer[offset++];
     offset += varintvalue;
+    if(offset >= bufLen){
+        PRINTF("parse_spt_asset_and_amount: offer >= bufLen (4)\n");
+        return false;
+    }
     numReceivers = buffer[offset++];
     for (i = 0; i < numReceivers; i++) {
         // witness version
         offset++;
+        if(offset >= bufLen){
+            PRINTF("parse_spt_asset_and_amount: offer >= bufLen (5)\n");
+            return false;
+        }
         // witness program
         varintvalue = buffer[offset++];
         offset += varintvalue;
+        if(offset >= bufLen){
+            PRINTF("parse_spt_asset_and_amount: offer >= bufLen (6)\n");
+            return false;
+        }
         // accumulate recipient amount
         btchip_swap_bytes(amount, buffer[offset], 8);
         transaction_amount_add_be(*amountBuffer,
                                   *amountBuffer, amount);
         offset += 8;
+        if(offset >= bufLen){
+            PRINTF("parse_spt_asset_and_amount: offer >= bufLen (7)\n");
+            return false;
+        }
     }
     return true;
 }
@@ -2183,8 +2208,8 @@ uint8_t prepare_single_output() {
     uint32_t nVersion = btchip_read_u32(btchip_context_D.transactionVersion, 0, 0);
     if(G_coin_config->kind == COIN_KIND_SYSCOIN && (nVersion == SYSCOIN_SPT_ASSETSEND || nVersion == SYSCOIN_SPT_ASSETALLOCATIONSEND)) {
         uint32_t assetguid;
-        // offset + 1 (skip opreturn marker)
-        if(parse_spt_asset_and_amount(offset+1, btchip_context_D.currentOutput, &amount, &assetguid)) {
+        // offset + 2 (skip field delim and opreturn op)
+        if(parse_spt_asset_and_amount(btchip_context_D.currentOutput + offset + 2, &amount, &assetguid)) {
             char coinId[MAX_SHORT_COIN_ID];
             unsigned char coinIdLength;
             get_spt_coinid(&coinId, assetguid);
