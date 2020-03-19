@@ -2050,7 +2050,7 @@ error:
 #define SYSCOIN_SPT_SYSX 1045909988
 #define SYSCOIN_SPT_AGX 367794646
 
-void get_spt_coinid_and_precision(char (*coinId)[MAX_SHORT_COIN_ID], unsigned char* precision, uint32_t assetguid) {
+void get_spt_coinid_and_precision(unsigned char* precision, char (*coinId)[MAX_SHORT_COIN_ID], uint32_t assetguid) {
     switch(assetguid) {
         case SYSCOIN_SPT_SYSX:
             *precision = 8;
