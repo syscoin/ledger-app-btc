@@ -2079,7 +2079,7 @@ bool parse_spt_asset_and_amount(unsigned char* buffer, unsigned char (*amountBuf
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen\n");
         return false;
     }
-    os_memset(amountBuffer, 0, sizeof(amountBuffer));
+    os_memset(*amountBuffer, 0, sizeof(*amountBuffer));
     bufLen = sizeof(buffer);
     // allocation
 	*asset = btchip_read_u32(buffer + offset, 0, 0);
