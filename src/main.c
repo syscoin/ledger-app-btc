@@ -2050,15 +2050,18 @@ error:
 #define SYSCOIN_SPT_SYSX 1045909988
 #define SYSCOIN_SPT_AGX 367794646
 
-void get_spt_coinid(char (*coinId)[MAX_SHORT_COIN_ID], uint32_t assetguid) {
+void get_spt_coinid_and_precision(char (*coinId)[MAX_SHORT_COIN_ID], unsigned char* precision, uint32_t assetguid) {
     switch(assetguid) {
         case SYSCOIN_SPT_SYSX:
+            *precision = 8;
             strcpy(*coinId, "SYSX");
             break;
         case SYSCOIN_SPT_AGX:
+            *precision = 8;
             strcpy(*coinId, "AGX");
             break;
         default:
+            *precision = 4;
             strcpy(*coinId, "SPT");
             break;
     }
@@ -2198,27 +2201,26 @@ uint8_t prepare_single_output() {
     // Prepare amount
     // handle Syscoin SPT
     uint32_t nVersion = btchip_read_u32(btchip_context_D.transactionVersion, 0, 0);
-    if(G_coin_config->kind == COIN_KIND_SYSCOIN) {
-        if(nVersion == SYSCOIN_SPT_ASSETSEND || nVersion == SYSCOIN_SPT_ASSETALLOCATIONSEND) {
+    if(G_coin_config->kind == COIN_KIND_SYSCOIN && (nVersion == SYSCOIN_SPT_ASSETSEND || nVersion == SYSCOIN_SPT_ASSETALLOCATIONSEND)) {
+        uint32_t assetguid;
+        // offset + 3 (varint + opreturn op + varint)
+        if(parse_spt_asset_and_amount(btchip_context_D.currentOutput, offset+3, &amount, &assetguid)) {
+            char coinId[MAX_SHORT_COIN_ID];
+            unsigned char precision;
+            unsigned char coinIdLength;
+            get_spt_coinid_and_precision(&precision, &coinId, assetguid);
+            coinIdLength = strlen(PIC(coinId));
+            os_memmove(vars.tmp.fullAmount, coinId,
+                    coinIdLength);
+            vars.tmp.fullAmount[coinIdLength] = ' ';
+            btchip_context_D.tmp =
+                (unsigned char *)(vars.tmp.fullAmount +
+                            coinIdLength + 1);
+            textSize = btchip_convert_hex_amount_to_displayable_with_precision(amount, precision);
+            vars.tmp.fullAmount[textSize + coinIdLength + 1] =
+                '\0'; 
+        } else {
             return 0;
-            uint32_t assetguid;
-            // offset + 3 (varint + opreturn op + varint)
-            if(parse_spt_asset_and_amount(btchip_context_D.currentOutput, offset+3, &amount, &assetguid)) {
-                char coinId[MAX_SHORT_COIN_ID];
-                unsigned char coinIdLength;
-                get_spt_coinid(&coinId, assetguid);
-                coinIdLength = strlen(PIC(coinId));
-                os_memmove(vars.tmp.fullAmount, coinId,
-                        coinIdLength);
-                vars.tmp.fullAmount[coinIdLength] = ' ';
-                btchip_context_D.tmp =
-                    (unsigned char *)(vars.tmp.fullAmount +
-                                coinIdLength + 1);
-                textSize = btchip_convert_hex_amount_to_displayable(amount);
-                vars.tmp.fullAmount[textSize + coinIdLength + 1] =
-                    '\0'; 
-                return 1;
-            }
         }
     }
     // Handle Omni simple send

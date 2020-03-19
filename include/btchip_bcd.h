@@ -21,5 +21,7 @@
 
 unsigned char
 btchip_convert_hex_amount_to_displayable(unsigned char *amount);
+unsigned char
+btchip_convert_hex_amount_to_displayable_with_precision(unsigned char *amount, unsigned char precision);
 
 #endif
