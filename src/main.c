@@ -2061,7 +2061,7 @@ void get_spt_coinid_and_precision(unsigned char* precision, char (*coinId)[MAX_S
             strcpy(*coinId, "AGX");
             break;
         default:
-            *precision = 4;
+            *precision = 8;
             strcpy(*coinId, "SPT");
             break;
     }
