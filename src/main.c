@@ -2082,7 +2082,7 @@ bool parse_spt_asset_and_amount(unsigned char* buffer, unsigned char (*amountBuf
     os_memset(amountBuffer, 0, sizeof(amountBuffer));
     bufLen = sizeof(buffer);
     // allocation
-	*asset = btchip_read_u32(buffer[offset], 0, 0);
+	*asset = btchip_read_u32(buffer + offset, 0, 0);
     offset += 4;
     if(offset >= bufLen){
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen (2)\n");
@@ -2117,7 +2117,7 @@ bool parse_spt_asset_and_amount(unsigned char* buffer, unsigned char (*amountBuf
             return false;
         }
         // accumulate recipient amount
-        btchip_swap_bytes(amount, buffer[offset], 8);
+        btchip_swap_bytes(amount, buffer + offset, 8);
         transaction_amount_add_be(*amountBuffer,
                                   *amountBuffer, amount);
         offset += 8;
