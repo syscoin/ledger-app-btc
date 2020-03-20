@@ -2045,11 +2045,6 @@ error:
 #define MAIDSAFE_ASSETID 3
 #define USDT_ASSETID 31
 
-#define SYSCOIN_SPT_ASSETSEND 0x7405
-#define SYSCOIN_SPT_ASSETALLOCATIONSEND 0x7408
-#define SYSCOIN_SPT_SYSX 1045909988
-#define SYSCOIN_SPT_AGX 367794646
-
 void get_spt_coinid_and_precision(unsigned char* precision, char (*coinId)[MAX_SHORT_COIN_ID], uint32_t assetguid) {
     switch(assetguid) {
         case SYSCOIN_SPT_SYSX:
