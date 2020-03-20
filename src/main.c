@@ -2219,7 +2219,7 @@ uint8_t prepare_single_output() {
                 btchip_context_D.tmp =
                     (unsigned char *)(vars.tmp.fullAmount +
                                 coinIdLength + 1);
-                textSize = btchip_convert_hex_amount_to_displayable_with_precision(amount, precision);
+                textSize = btchip_convert_hex_amount_to_displayable(amount, precision);
                 vars.tmp.fullAmount[textSize + coinIdLength + 1] =
                     '\0'; 
                 return 1;
