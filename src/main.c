@@ -2077,7 +2077,7 @@ int parse_spt_asset_and_amount(unsigned char* buffer, unsigned int offset, unsig
     }	
     os_memset(*amountBuffer, 0, sizeof(*amountBuffer));
     // allocation
-	*asset = btchip_read_u32(&buffer[offset], 1, 0);
+	*asset = btchip_read_u32(&buffer[offset], 0, 0);
     offset += 4;
     if(offset >= MAX_OUTPUT_TO_CHECK){
         PRINTF("parse_spt_asset_and_amount: offer >= bufLen (2)\n");

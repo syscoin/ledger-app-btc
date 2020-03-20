@@ -304,9 +304,15 @@ unsigned short btchip_apdu_hash_input_finalize_full_internal(
                     sizeof(transactionSummary->summarydata.changeAddress));
                 btchip_context_D.tmpCtx.output.changeInitialized = 1;
                 btchip_context_D.tmpCtx.output.changeAccepted = 0;
-
+                bool is_change_path = true;
+                if(G_coin_config->kind == COIN_KIND_SYSCOIN) {
+                    uint32_t nVersion = btchip_read_u32(btchip_context_D.transactionVersion, 0, 0);
+                    if(nVersion == SYSCOIN_SPT_ASSETSEND || nVersion == SYSCOIN_SPT_ASSETALLOCATIONSEND) {
+                        is_change_path = false;
+                    }
+                }
                 // if the bip44 change path provided is not canonical or its index are unsual, ask for user approval
-                if(bip44_derivation_guard(transactionSummary->summarydata.keyPath, true)) {
+                if(bip44_derivation_guard(transactionSummary->summarydata.keyPath, is_change_path)) {
                     btchip_context_D.io_flags |= IO_ASYNCH_REPLY;
                     btchip_context_D.outputParsingState = BTCHIP_BIP44_CHANGE_PATH_VALIDATION;
                     btchip_bagl_request_change_path_approval(transactionSummary->summarydata.keyPath);
