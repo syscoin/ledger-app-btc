@@ -91,11 +91,14 @@ btchip_convert_hex_amount_to_displayable_internal(unsigned char *amount, unsigne
 
 unsigned char
 btchip_convert_hex_amount_to_displayable(unsigned char *amount) {
-    unsigned char LOOP1 = 13;
-    unsigned char LOOP2 = 8;
-    if ((G_coin_config->flags & FLAG_PEERCOIN_UNITS)) {
+    unsigned char LOOP1;
+    unsigned char LOOP2;
+    if (!(G_coin_config->flags & FLAG_PEERCOIN_UNITS)) {
+        LOOP1 = 13;
+        LOOP2 = 8;
+    } else {
         LOOP1 = 15;
-        LOOP2 = 6;
+        LOOP2 = 6;      
     }
     return btchip_convert_hex_amount_to_displayable_internal(amount, LOOP1, LOOP2);
 }
