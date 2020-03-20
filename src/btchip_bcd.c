@@ -101,7 +101,7 @@ btchip_convert_hex_amount_to_displayable(unsigned char *amount) {
 }
 
 unsigned char
-btchip_convert_hex_amount_to_displayable(unsigned char *amount, unsigned char precision) {
+btchip_convert_hex_amount_to_displayable_with_precision(unsigned char *amount, unsigned char precision) {
     unsigned char LOOP1 = 13;
     unsigned char LOOP2 = 8;
     if(precision > 8)
