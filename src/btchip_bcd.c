@@ -90,17 +90,6 @@ btchip_convert_hex_amount_to_displayable_internal(unsigned char *amount, unsigne
 }
 
 unsigned char
-btchip_convert_hex_amount_to_displayable(unsigned char *amount) {
-    if ((G_coin_config->flags & FLAG_PEERCOIN_UNITS)) {
-        // ppc precision is 6
-        return btchip_convert_hex_amount_to_displayable_internal(amount, 6);    
-    } else {
-        // default precision is 8
-        return btchip_convert_hex_amount_to_displayable_internal(amount, 8);     
-    }
-}
-
-unsigned char
 btchip_convert_hex_amount_to_displayable_with_precision(unsigned char *amount, unsigned char precision) {
     unsigned char LOOP1 = 13;
     unsigned char LOOP2 = 8;
@@ -110,4 +99,16 @@ btchip_convert_hex_amount_to_displayable_with_precision(unsigned char *amount, u
     LOOP1 += precisionOffset;
     LOOP2 -= precisionOffset;
     return btchip_convert_hex_amount_to_displayable_internal(amount, LOOP1, LOOP2);
+}
+
+
+unsigned char
+btchip_convert_hex_amount_to_displayable(unsigned char *amount) {
+    if ((G_coin_config->flags & FLAG_PEERCOIN_UNITS)) {
+        // ppc precision is 6
+        return btchip_convert_hex_amount_to_displayable_with_precision(amount, 6);    
+    } else {
+        // default precision is 8
+        return btchip_convert_hex_amount_to_displayable_with_precision(amount, 8);     
+    }
 }
